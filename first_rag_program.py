@@ -5,7 +5,7 @@ import os
 from sklearn.metrics.pairwise import cosine_similarity
 
 # OpenAI APIキーの設定
-os.environ["OPENAI_API_KEY"] = "xxxxxxxxxxxxxxxxxxxxxxxxx"
+os.environ["OPENAI_API_KEY"] = "sk-proj-JCOqpomOERRia7xRaYMDT3BlbkFJQ3ZkgGpKrwI7kgAjk8iE"
 
 # OpenAIクライアントの初期化
 client = OpenAI()
