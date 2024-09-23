@@ -7,7 +7,7 @@ import requests
 from bs4 import BeautifulSoup
 
 # OpenAI APIキーの設定
-os.environ["OPENAI_API_KEY"] = "sk-proj-JCOqpomOERRia7xRaYMDT3BlbkFJQ3ZkgGpKrwI7kgAjk8iE"
+os.environ["OPENAI_API_KEY"] = "xxx"
 
 # OpenAIクライアントの初期化
 client = OpenAI()
