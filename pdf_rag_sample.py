@@ -1,4 +1,5 @@
 # pip3 install openai
+# pip3 install pdfminer.six
 from openai import OpenAI
 import os
 from sklearn.metrics.pairwise import cosine_similarity
