@@ -6,6 +6,9 @@ from sklearn.metrics.pairwise import cosine_similarity
 import requests
 from bs4 import BeautifulSoup
 
+CHUNK_SIZE = 400
+OVERLAP = 50
+
 # OpenAI APIキーの設定
 os.environ["OPENAI_API_KEY"] = "xxx"
 
@@ -29,14 +32,14 @@ def _scrape_article(url):
 
 
 # 学習データとするチャンクの作成
-def chunk_text(text, chunk_size, overlap):
+def chunk_text(text):
     chunks = []
     start = 0
-    while start + chunk_size <= len(text):
-        chunks.append(text[start:start + chunk_size])
-        start += (chunk_size - overlap)
+    while start + CHUNK_SIZE <= len(text):
+        chunks.append(text[start:start + CHUNK_SIZE])
+        start += (CHUNK_SIZE - OVERLAP)
     if start < len(text):
-        chunks.append(text[-chunk_size:])
+        chunks.append(text[-CHUNK_SIZE:])
     return chunks
 
 
@@ -50,17 +53,17 @@ def vectorize_text(text):
 
 
 # 最も類似した文書を見つける
-def find_most_similar(question_vector, vectors, documents):
+def find_most_similar(question_vector, document_vectors, text_chunks):
     max_similarity = 0
     most_similar_index = 0
 
-    for index, vector in enumerate(vectors):
+    for index, vector in enumerate(document_vectors):
         similarity = cosine_similarity([question_vector], [vector])[0][0]
         if similarity > max_similarity:
             max_similarity = similarity
             most_similar_index = index
     
-    return documents[most_similar_index]
+    return text_chunks[most_similar_index]
 
 
 # GPT-3に質問を投げる
@@ -68,7 +71,7 @@ def ask_question(question, context):
     prompt = f'''以下の質問に対する回答を教えてください。
     質問: {question}
     文脈: {context}
-    回答:'''
+    '''
 
     response = client.completions.create(
         model="gpt-3.5-turbo-instruct",
@@ -78,20 +81,24 @@ def ask_question(question, context):
     return response.choices[0].text
 
 if __name__ == "__main__":
-    url = "https://news.yahoo.co.jp/"
-    chunk_size = 400
-    overlap = 50
+    # 抽出対象URL
+    url = "https://docs.oracle.com/javase/jp/11/docs/api/index.html"
+    print("指定したURL: " + url)
 
+    # 抽出したいテキスト群に加工し, ベクトル化
     article_text = _scrape_article(url)
-    text_chunks = chunk_text(article_text, chunk_size, overlap)
+    text_chunks = chunk_text(article_text)
+    document_vectors = [vectorize_text(doc) for doc in text_chunks]
 
-    vectors = [vectorize_text(doc) for doc in text_chunks]
-
-    question = "天気のニュースはありますか"
-
+    # 質問文
+    question = "画像の読込に使える関数はどれですか？"
+    print("質問: " + question)
     question_vector = vectorize_text(question)
 
-    most_similar_chunk = find_most_similar(question_vector, vectors, text_chunks)
+    # 最も質問に対する回答の意図に近い文書を取得
+    selected_chunk = find_most_similar(question_vector, document_vectors, text_chunks)
+    print("もっともらしい文面: " + selected_chunk)
 
-    answer = ask_question(question, most_similar_chunk)
-    print(answer)
+    # 取得したchunkをもとに質問をなげ, GPTから回答を取得する
+    answer = ask_question(question, selected_chunk)
+    print("回答: " + answer)

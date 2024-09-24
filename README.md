@@ -2,9 +2,9 @@
 
 ### Directions
 
-#### CLI (`first_rag_sample.py` on terminal)
+#### CLI (`xxx.py` on terminal)
 
 1. Get OpenAI API.
-2. Replace from xxx to your api key. `os.environ["OPENAI_API_KEY"] = "xxxxxxxxxxxxxxxxxxxxxxxxx"`
-3. Arrange answers.
-4. Run `first_rag_sample.py`
+2. Replace from xxx to your api key. `os.environ["OPENAI_API_KEY"] = "xxx"`
+3. Arrange question and answers.
+4. Run each python samples.
