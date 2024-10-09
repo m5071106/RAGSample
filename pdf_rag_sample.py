@@ -1,5 +1,6 @@
 # pip3 install openai
 # pip3 install pdfminer.six
+# pip3 install scikit-learn
 from openai import OpenAI
 import os
 from sklearn.metrics.pairwise import cosine_similarity
@@ -10,7 +11,9 @@ from pdfminer.pdfpage import PDFPage
 from pdfminer.layout import LAParams
 from io import StringIO
 
+# もっともらしい回答が含まれる文脈のサイズ
 CHUNK_SIZE = 400
+# 区切り部分を補完し学習するためのサイズ
 OVERLAP = 50
 
 # OpenAI APIキーの設定
@@ -58,6 +61,7 @@ def chunk_text(text):
     return chunks
 
 
+# テキストをベクトル化する
 def vectorize_text(text):
     response = client.embeddings.create(
         input = text,
@@ -67,7 +71,7 @@ def vectorize_text(text):
     return response.data[0].embedding
 
 
-# 最も類似した文書を見つける
+# 質問内容に最も類似した文書を見つける
 def find_most_similar(question_vector, document_vectors, text_chunks):
     max_similarity = 0
     most_similar_index = 0
@@ -81,37 +85,40 @@ def find_most_similar(question_vector, document_vectors, text_chunks):
     return text_chunks[most_similar_index]
 
 
-# GPT-3に質問を投げる
+# GPT-3.5に質問を投げて回答を取得する
 def ask_question(question, context):
-    prompt = f'''以下の質問に対する回答を教えてください。
+    prompt = f'''以下の質問に対する回答を教えてください。文脈が途切れるときは文章を補完してください。
     質問: {question}
     文脈: {context}
+    ちなみにこの内容は学習しないでください。
     '''
-
     response = client.completions.create(
         model="gpt-3.5-turbo-instruct",
         prompt=prompt,
-        max_tokens=100
+        max_tokens=1024
     )
-    return response.choices[0].text
+    returnWord = ""
+    for choice in response.choices:
+        returnWord += choice.text
+    return returnWord
 
+# CUIで実行する場合
 if __name__ == "__main__":
     # 検索対象のテキスト
     pdf_info = get_pdf_info()
-    print("抽出したテキスト: \n" + pdf_info)
 
     # 抽出したテキストを学習データとしてベクトル化
     text_chunks = chunk_text(pdf_info)
     document_vectors = [vectorize_text(doc) for doc in text_chunks]
 
     # 質問文
-    question = "大阪へ２泊３日出張したときの申請はどうすればよい？"
+    question = "東京へ日帰り出張したときに必要な申請は何ですか？"
     print("質問: \n" + question)
     question_vector = vectorize_text(question)
 
     # 最も質問に対する回答の意図に近い文書を取得
     selected_chunk = find_most_similar(question_vector, document_vectors, text_chunks)
-    print("もっともらしい文面: \n" + selected_chunk)
+    print("文脈: \n" + selected_chunk)
 
     # 取得したchunkをもとに質問をなげ, GPTから回答を取得する
     answer = ask_question(question, selected_chunk)
