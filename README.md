@@ -1,4 +1,4 @@
-## Whisper sample program with m3, macOS 14.5, Python 3.10.14
+## RAG sample program with m3, macOS 14.5, Python 3.10.14
 
 ### Directions
 
