@@ -73,16 +73,24 @@ def vectorize_text(text):
 
 # 質問内容に最も類似した文書を見つける
 def find_most_similar(question_vector, document_vectors, text_chunks):
-    max_similarity = 0
-    most_similar_index = 0
+    # max_similarity = 0
+    # most_similar_index = 0
+
+    # for index, vector in enumerate(document_vectors):
+    #     similarity = cosine_similarity([question_vector], [vector])[0][0]
+    #     if similarity > max_similarity:
+    #         max_similarity = similarity
+    #         most_similar_index = index
+    # return text_chunks[most_similar_index]
+    
+    similarities = []
 
     for index, vector in enumerate(document_vectors):
         similarity = cosine_similarity([question_vector], [vector])[0][0]
-        if similarity > max_similarity:
-            max_similarity = similarity
-            most_similar_index = index
-    
-    return text_chunks[most_similar_index]
+        similarities.append([similarity, index])
+    similarities.sort(reverse=True, key=lambda x: x[0])
+    top_documents = [text_chunks[index] for similarity, index in similarities[:2]]
+    return top_documents
 
 
 # GPT-3.5に質問を投げて回答を取得する
@@ -112,13 +120,13 @@ if __name__ == "__main__":
     document_vectors = [vectorize_text(doc) for doc in text_chunks]
 
     # 質問文
-    question = "東京へ日帰り出張したときに必要な申請は何ですか？"
+    question = "CM-30にファンタムはありますか？"
     print("質問: \n" + question)
     question_vector = vectorize_text(question)
 
     # 最も質問に対する回答の意図に近い文書を取得
     selected_chunk = find_most_similar(question_vector, document_vectors, text_chunks)
-    print("文脈: \n" + selected_chunk)
+    # print("文脈: \n" + selected_chunk
 
     # 取得したchunkをもとに質問をなげ, GPTから回答を取得する
     answer = ask_question(question, selected_chunk)
