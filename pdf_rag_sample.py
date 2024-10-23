@@ -126,7 +126,7 @@ if __name__ == "__main__":
 
     # 最も質問に対する回答の意図に近い文書を取得
     selected_chunk = find_most_similar(question_vector, document_vectors, text_chunks)
-    # print("文脈: \n" + selected_chunk
+    print("文脈: \n",  selected_chunk)
 
     # 取得したchunkをもとに質問をなげ, GPTから回答を取得する
     answer = ask_question(question, selected_chunk)
