@@ -10,17 +10,28 @@ from pdfminer.pdfinterp import PDFPageInterpreter
 from pdfminer.pdfpage import PDFPage
 from pdfminer.layout import LAParams
 from io import StringIO
+from openai import AzureOpenAI
 
 # もっともらしい回答が含まれる文脈のサイズ
 CHUNK_SIZE = 400
 # 区切り部分を補完し学習するためのサイズ
 OVERLAP = 50
+# 私用するAPI
+use_azure = True
 
-# OpenAI APIキーの設定
-os.environ["OPENAI_API_KEY"] = "xxx"
+if use_azure == False:
+    # OpenAI APIキーの設定
+    os.environ["OPENAI_API_KEY"] = "xxx"
 
-# OpenAIクライアントの初期化
-client = OpenAI()
+    # OpenAIクライアントの初期化
+    client = OpenAI()
+else:
+    # Azure OpenAIクライアントの初期化
+    client = AzureOpenAI(
+        api_key="xxx",
+        api_version="2024-08-01-preview",
+        azure_endpoint="https://xxx.openai.azure.com/",
+    )
 
 # PDF情報をテキストに変換する
 def pdf2text(pdf_path):
@@ -65,8 +76,9 @@ def chunk_text(text):
 def vectorize_text(text):
     response = client.embeddings.create(
         input = text,
-        # モデルの指定 (様々なモデルが利用可能)
+        # モデルの指定 (様々なモデルが利用可能) OpenAI と Azure OpenAI でモデル名が同じ
         model = "text-embedding-3-small"
+        
     )
     return response.data[0].embedding
 
@@ -100,11 +112,18 @@ def ask_question(question, context):
     文脈: {context}
     ちなみにこの内容は学習しないでください。
     '''
-    response = client.completions.create(
-        model="gpt-3.5-turbo-instruct",
-        prompt=prompt,
-        max_tokens=1024
-    )
+    if use_azure == False:
+        response = client.completions.create(
+            model="gpt-3.5-turbo-instruct",
+            prompt=prompt,
+            max_tokens=1024
+        )
+    else:
+        response = client.completions.create(
+            model="gpt-35-turbo-instruct",
+            prompt=prompt,
+            max_tokens=1024
+        )
     returnWord = ""
     for choice in response.choices:
         returnWord += choice.text
@@ -112,6 +131,12 @@ def ask_question(question, context):
 
 # CUIで実行する場合
 if __name__ == "__main__":
+    # mode
+    if use_azure == False:
+        print("Use OpenAI")
+    else:
+        print("Use Azure OpenAI")
+
     # 検索対象のテキスト
     pdf_info = get_pdf_info()
 
