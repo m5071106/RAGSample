@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG Sample</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>RAG Sample Web GUI</h1>
+    </header>
+    <main>
+        <section id="file-upload">
+            <form method="post" action="/upload" enctype="multipart/form-data">
+            <label for="file">1.検索するPDFをアップロードしてください:</label>
+            <br />
+            <input type="file" id="file" name="file" required>
+            <br />
+            <button type="submit">アップロード</button>
+            </form>
+        </section>
+        <br />
+        <div style="color:blue">
+            {{message}}
+        </div>
+        <section id="question-form">
+            <form method="post" action="/ask">
+                <label for="question">2.質問を入力してください:</label>
+                <input type="text" id="question" name="question" required>
+                <br />
+                <button type="submit">質問する</button>
+            </form>
+        </section>
+    </main>
+    <footer>
+    </footer>
+    <script src="script.js"></script>
+</body>
+</html>
